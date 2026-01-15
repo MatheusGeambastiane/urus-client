@@ -1,4 +1,5 @@
 export type AppointmentDraft = {
+  appointmentId?: number;
   serviceId: number;
   serviceName?: string;
   servicePrice?: string;

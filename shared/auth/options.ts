@@ -37,7 +37,14 @@ export const authOptions: NextAuthOptions = {
           name: user.name ?? user.user_name ?? user.email ?? credentials.email,
           email: user.email ?? credentials.email,
           accessToken: data.access ?? data.token ?? null,
-        } as { id: string; name?: string; email?: string; accessToken?: string | null };
+          firstName: user.first_name ?? user.firstName ?? null,
+        } as {
+          id: string;
+          name?: string;
+          email?: string;
+          accessToken?: string | null;
+          firstName?: string | null;
+        };
       },
     }),
   ],
@@ -51,13 +58,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user && "accessToken" in user) {
         token.accessToken = (user as { accessToken?: string | null }).accessToken ?? null;
+        token.firstName = (user as { firstName?: string | null }).firstName ?? null;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { accessToken?: string | null }).accessToken =
-          (token as { accessToken?: string | null }).accessToken ?? null;
+        (session.user as { accessToken?: string | null; firstName?: string | null })
+          .accessToken = (token as { accessToken?: string | null }).accessToken ?? null;
+        (session.user as { accessToken?: string | null; firstName?: string | null })
+          .firstName = (token as { firstName?: string | null }).firstName ?? null;
       }
       return session;
     },

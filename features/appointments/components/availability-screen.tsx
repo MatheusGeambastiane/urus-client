@@ -8,7 +8,10 @@ import { SlotsList } from "./slots-list";
 import { buildDateOptions } from "../utils/date";
 import { groupSlotsByPeriod } from "../utils/group-slots";
 import { getAvailableTimes } from "../services/available-times-service";
-import { saveAppointmentDraft } from "../utils/appointment-storage";
+import {
+  loadAppointmentDraft,
+  saveAppointmentDraft,
+} from "../utils/appointment-storage";
 import type { AppointmentDraft } from "../types/appointment-draft";
 import Link from "next/link";
 
@@ -18,13 +21,27 @@ type AvailabilityScreenProps = {
 
 export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
   const dateOptions = useMemo(() => buildDateOptions(10), []);
-  const [selectedDate, setSelectedDate] = useState(dateOptions[0]?.key ?? "");
+  const initialDate = dateOptions[0]?.key ?? "";
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const [selectedTime, setSelectedTime] = useState<string | undefined>();
+  const [hasMounted, setHasMounted] = useState(false);
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const groupedSlots = useMemo(() => groupSlotsByPeriod(slots), [slots]);
+
+  useEffect(() => {
+    setHasMounted(true);
+    const draft = loadAppointmentDraft();
+    if (!draft) return;
+    if (draft.date && dateOptions.some((option) => option.key === draft.date)) {
+      setSelectedDate(draft.date);
+    }
+    if (draft.time) {
+      setSelectedTime(draft.time);
+    }
+  }, [dateOptions]);
 
   useEffect(() => {
     if (!selectedDate) return;
@@ -47,11 +64,15 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
     };
 
     fetchSlots();
-    setSelectedTime(undefined);
+    setSelectedTime((current) =>
+      current && selectedDate === loadAppointmentDraft()?.date ? current : undefined
+    );
   }, [selectedDate, service.id]);
 
   useEffect(() => {
+    const previous = loadAppointmentDraft() ?? ({} as AppointmentDraft);
     const draft: AppointmentDraft = {
+      ...previous,
       serviceId: service.id,
       serviceName: service.name,
       servicePrice: service.price,
@@ -153,7 +174,7 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
         )}
       </section>
 
-      {selectedTime ? (
+      {hasMounted && selectedTime ? (
         <div className="fixed bottom-24 left-0 right-0 z-10 border-t border-ink-100 bg-white/95 px-4 py-4 backdrop-blur">
           <div className="mx-auto w-full max-w-md">
             <Link

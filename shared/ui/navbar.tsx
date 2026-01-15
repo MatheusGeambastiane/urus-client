@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
+import { LetterReveal } from "@/shared/ui/letter-reveal";
 
 export const Navbar = () => {
   const { data: session } = useSession();
@@ -14,14 +16,26 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-transparent">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 pb-4 pt-6">
-        <div>
-          <span className="text-xs uppercase tracking-[0.3em] text-ink-400">
-            Urus Barber
-          </span>
+    <header className="sticky top-0 z-20 bg-transparent backdrop-blur">
+      <div className="relative mx-auto flex w-full max-w-md items-center justify-center px-4 pb-4 pt-6">
+        <div className="flex items-center gap-3">
+    
+          <div className="flex flex-col items-center">
+            <LetterReveal
+              text="URUS"
+              className="font-logo text-lg font-bold uppercase tracking-[0.8em] text-ink-900"
+              initialDelay={0.5}
+              perLetterDelay={0.22}
+              letterDuration={0.6}
+              fadeInDelay={0.6}
+              fadeInDuration={0.5}
+            />
+            <span className="font-logo text-[10px] font-semibold uppercase tracking-[0.4em] text-ink-500">
+              BARBEARIA
+            </span>
+          </div>
         </div>
-        <div className="relative">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2">
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}

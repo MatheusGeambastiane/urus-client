@@ -16,7 +16,8 @@ export default async function Home() {
   ]);
 
   const groupedServices = groupServicesByCategory(services);
-  const userName = session?.user?.name?.split(" ")[0];
+  const firstName = (session?.user as { firstName?: string | null })?.firstName ?? null;
+  const userName = firstName ?? session?.user?.name?.split(" ")[0] ?? null;
   const accessToken = (session?.user as { accessToken?: string | null })
     ?.accessToken;
   const nextAppointment = accessToken
@@ -64,7 +65,10 @@ export default async function Home() {
       </section>
 
       {nextAppointment ? (
-        <NextAppointmentCard appointment={nextAppointment} />
+        <NextAppointmentCard
+          appointment={nextAppointment}
+          accessToken={accessToken ?? null}
+        />
       ) : null}
 
       <CategoryCarousel categories={categories} />

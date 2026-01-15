@@ -30,6 +30,10 @@ body {
   font-family: var(--font-display), ui-serif, serif;
 }
 
+.font-logo {
+  font-family: var(--font-logo), ui-sans-serif, system-ui;
+}
+
 .shadow-soft {
   box-shadow: 0 12px 40px -24px rgba(27, 27, 27, 0.35);
 }

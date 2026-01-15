@@ -12,6 +12,7 @@ import {
 } from "@/features/appointments/utils/appointment-storage";
 import type { AppointmentDraft } from "@/features/appointments/types/appointment-draft";
 import { createAppointment } from "@/features/appointments/services/appointment-service";
+import { updateAppointment } from "@/features/appointments/services/update-appointment-service";
 
 type ProfessionalsScreenProps = {
   professionals: ProfessionalProfile[];
@@ -28,7 +29,7 @@ export const ProfessionalsScreen = ({
     useState<ProfessionalProfile | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const appointmentDraft = useMemo(() => loadAppointmentDraft(), []);
 
@@ -76,22 +77,38 @@ export const ProfessionalsScreen = ({
     }
 
     const token = (session?.user as { accessToken?: string | null })?.accessToken;
+    const isEditing = Boolean(draft?.appointmentId);
 
     setConfirmLoading(true);
     try {
-      await createAppointment({
-        serviceId: draft.serviceId,
-        professionalId: draft.professionalId,
-        dateTime,
-        accessToken: token,
-      });
-      setShowToast(true);
+      if (isEditing && draft?.appointmentId) {
+        await updateAppointment({
+          appointmentId: draft.appointmentId,
+          serviceId: draft.serviceId,
+          professionalId: draft.professionalId,
+          dateTime,
+          accessToken: token,
+        });
+        setToastMessage("Agendamento atualizado");
+      } else {
+        await createAppointment({
+          serviceId: draft.serviceId,
+          professionalId: draft.professionalId,
+          dateTime,
+          accessToken: token,
+        });
+        setToastMessage("Agendamento confirmado");
+      }
       setTimeout(() => {
-        setShowToast(false);
+        setToastMessage(null);
         router.push("/");
       }, 1800);
     } catch (error) {
-      setConfirmError("Nao foi possivel confirmar o agendamento.");
+      setConfirmError(
+        isEditing
+          ? "Nao foi possivel atualizar o agendamento."
+          : "Nao foi possivel confirmar o agendamento."
+      );
     } finally {
       setConfirmLoading(false);
     }
@@ -145,13 +162,17 @@ export const ProfessionalsScreen = ({
           onClick={handleConfirm}
           disabled={confirmLoading}
         >
-          {confirmLoading ? "Confirmando..." : "Confirmar agendamento"}
+          {confirmLoading
+            ? "Confirmando..."
+            : appointmentDraft?.appointmentId
+            ? "Atualizar agendamento"
+            : "Confirmar agendamento"}
         </Button>
       ) : null}
 
-      {showToast ? (
+      {toastMessage ? (
         <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white shadow-soft">
-          Agendamento confirmado
+          {toastMessage}
         </div>
       ) : null}
     </div>
