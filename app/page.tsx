@@ -1,65 +1,85 @@
 import Image from "next/image";
+import { CategoryCarousel } from "@/features/services/components/category-carousel";
+import { ServicesList } from "@/features/services/components/services-list";
+import { getServiceCategories } from "@/features/services/services/service-category-service";
+import { getServices } from "@/features/services/services/service-service";
+import { groupServicesByCategory } from "@/features/services/utils/group-services";
+import { getAuthSession } from "@/shared/auth/server";
+import { getNextAppointment } from "@/features/appointments/services/next-appointment-service";
+import { NextAppointmentCard } from "@/features/appointments/components/next-appointment-card";
 
-export default function Home() {
+export default async function Home() {
+  const [session, categories, services] = await Promise.all([
+    getAuthSession(),
+    getServiceCategories(),
+    getServices(),
+  ]);
+
+  const groupedServices = groupServicesByCategory(services);
+  const userName = session?.user?.name?.split(" ")[0];
+  const accessToken = (session?.user as { accessToken?: string | null })
+    ?.accessToken;
+  const nextAppointment = accessToken
+    ? await getNextAppointment({ accessToken }).catch(() => null)
+    : null;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-10 px-4 pb-28 pt-8">
+      <header className="space-y-2">
+        <p className="text-xs uppercase tracking-[0.4em] text-ink-400">
+          Servicos da barbearia
+        </p>
+        <div className="space-y-1">
+          <h1 className="font-display text-3xl font-semibold text-ink-900">
+            {userName ? `Ola, ${userName}` : "Agende seu horario com estilo"}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm text-ink-600">
+            {userName
+              ? "Seus servicos preferidos estao separados abaixo."
+              : "Entre para ver seu historico e favoritos."}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <section className="space-y-4">
+        <div className="relative overflow-hidden rounded-[28px] bg-ink-900 shadow-soft">
+          <Image
+            src="/barba.png"
+            alt="Barbearia em destaque"
+            width={640}
+            height={420}
+            className="h-[320px] w-full object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute bottom-5 left-5 space-y-1 text-white">
+            <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+              Experiencia premium
+            </p>
+            <h2 className="font-display text-2xl font-semibold">
+              A barba perfeita
+            </h2>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {nextAppointment ? (
+        <NextAppointmentCard appointment={nextAppointment} />
+      ) : null}
+
+      <CategoryCarousel categories={categories} />
+
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.3em] text-ink-400">
+            Selecao atual
+          </p>
+          <h2 className="font-display text-2xl font-semibold text-ink-900">
+            Servicos disponiveis
+          </h2>
+        </div>
+        <ServicesList groups={groupedServices} />
+      </section>
+    </main>
   );
 }
