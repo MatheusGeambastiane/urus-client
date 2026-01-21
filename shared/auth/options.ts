@@ -26,7 +26,16 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!response.ok) {
-          return null;
+          let detail = "Email ou senha invalidos.";
+          try {
+            const errorData = await response.json();
+            if (typeof errorData?.detail === "string") {
+              detail = errorData.detail;
+            }
+          } catch (error) {
+            detail = "Nao foi possivel fazer login.";
+          }
+          throw new Error(detail);
         }
 
         const data = await response.json();

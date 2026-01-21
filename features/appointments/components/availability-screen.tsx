@@ -38,9 +38,6 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
     if (draft.date && dateOptions.some((option) => option.key === draft.date)) {
       setSelectedDate(draft.date);
     }
-    if (draft.time) {
-      setSelectedTime(draft.time);
-    }
   }, [dateOptions]);
 
   useEffect(() => {

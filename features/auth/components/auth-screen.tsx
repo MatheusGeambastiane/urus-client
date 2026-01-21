@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { loginSchema, registerSchema } from "../validation/auth-schemas";
 import { getPasswordStrength } from "../utils/password-strength";
@@ -29,6 +30,7 @@ type RegisterForm = {
 };
 
 export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
+  const router = useRouter();
   const [tab, setTab] = useState<"login" | "register">(defaultTab);
   const [loginForm, setLoginForm] = useState<LoginForm>({
     email: "",
@@ -74,15 +76,16 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
     setLoginLoading(true);
     try {
       const result = await signIn("credentials", {
-        redirect: true,
-        callbackUrl: redirectTo,
+        redirect: false,
         email: loginForm.email,
         password: loginForm.password,
       });
 
       if (result?.error) {
-        setAuthMessage("Email ou senha invalidos.");
+        setAuthMessage(result.error);
+        return;
       }
+      router.push(redirectTo);
     } catch (error) {
       setAuthMessage("Nao foi possivel fazer login.");
     } finally {
@@ -115,12 +118,16 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
       });
 
       if (registerForm.autoLogin) {
-        await signIn("credentials", {
-          redirect: true,
-          callbackUrl: redirectTo,
+        const result = await signIn("credentials", {
+          redirect: false,
           email: registerForm.email,
           password: registerForm.password,
         });
+        if (result?.error) {
+          setAuthMessage(result.error);
+          return;
+        }
+        router.push(redirectTo);
       } else {
         setTab("login");
         setAuthMessage("Conta criada. Agora faca login.");
