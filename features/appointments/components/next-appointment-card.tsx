@@ -8,17 +8,20 @@ import type { AppointmentDraft } from "@/features/appointments/types/appointment
 import { saveAppointmentDraft } from "@/features/appointments/utils/appointment-storage";
 import { formatDateKey } from "@/features/appointments/utils/date";
 import { updateAppointment } from "@/features/appointments/services/update-appointment-service";
+import { fetchWithAuth } from "@/shared/auth/auth-fetch";
 import { formatAppointmentDate, formatCurrency } from "@/shared/lib/formatters";
 import { publicEnv } from "@/shared/config/public-env";
 
 type NextAppointmentCardProps = {
   appointment: NextAppointment;
   accessToken?: string | null;
+  refreshToken?: string | null;
 };
 
 export const NextAppointmentCard = ({
   appointment,
   accessToken,
+  refreshToken,
 }: NextAppointmentCardProps) => {
   const router = useRouter();
   const [currentAppointment, setCurrentAppointment] =
@@ -60,14 +63,10 @@ export const NextAppointmentCard = ({
 
   const fetchNextAppointment = async () => {
     if (!accessToken) return null;
-    const response = await fetch(
+    const { response } = await fetchWithAuth(
       `${publicEnv.apiBaseUrl}/webapp/appointments/next/`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        cache: "no-store",
-      }
+      { cache: "no-store" },
+      { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
     );
 
     if (response.status === 404) {
@@ -97,6 +96,7 @@ export const NextAppointmentCard = ({
         appointmentId: activeAppointment.id,
         status: "cancelado",
         accessToken,
+        refreshToken,
       });
       const next = await fetchNextAppointment().catch(() => null);
       setCurrentAppointment(next);

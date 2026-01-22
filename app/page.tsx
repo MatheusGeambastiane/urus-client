@@ -20,8 +20,10 @@ export default async function Home() {
   const userName = firstName ?? session?.user?.name?.split(" ")[0] ?? null;
   const accessToken = (session?.user as { accessToken?: string | null })
     ?.accessToken;
+  const refreshToken = (session?.user as { refreshToken?: string | null })
+    ?.refreshToken;
   const nextAppointment = accessToken
-    ? await getNextAppointment({ accessToken }).catch(() => null)
+    ? await getNextAppointment({ accessToken, refreshToken }).catch(() => null)
     : null;
 
   return (
@@ -68,6 +70,7 @@ export default async function Home() {
         <NextAppointmentCard
           appointment={nextAppointment}
           accessToken={accessToken ?? null}
+          refreshToken={refreshToken ?? null}
         />
       ) : null}
 

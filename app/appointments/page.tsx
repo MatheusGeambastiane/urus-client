@@ -29,6 +29,8 @@ export default async function AppointmentsPage({
   const session = await getAuthSession();
   const accessToken = (session?.user as { accessToken?: string | null })
     ?.accessToken;
+  const refreshToken = (session?.user as { refreshToken?: string | null })
+    ?.refreshToken;
 
   if (!accessToken) {
     redirect("/auth?tab=login&redirect=/appointments");
@@ -38,6 +40,7 @@ export default async function AppointmentsPage({
   const pageSize = parseQueryNumber(searchParams?.page_size, 2);
   const response = await getRecentAppointments({
     accessToken,
+    refreshToken,
     page,
     pageSize,
   });

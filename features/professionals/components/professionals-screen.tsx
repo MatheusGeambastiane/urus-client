@@ -77,6 +77,8 @@ export const ProfessionalsScreen = ({
     }
 
     const token = (session?.user as { accessToken?: string | null })?.accessToken;
+    const refreshToken = (session?.user as { refreshToken?: string | null })
+      ?.refreshToken;
     const isEditing = Boolean(draft?.appointmentId);
 
     setConfirmLoading(true);
@@ -88,6 +90,7 @@ export const ProfessionalsScreen = ({
           professionalId: draft.professionalId,
           dateTime,
           accessToken: token,
+          refreshToken,
         });
         setToastMessage("Agendamento atualizado");
       } else {
@@ -96,6 +99,7 @@ export const ProfessionalsScreen = ({
           professionalId: draft.professionalId,
           dateTime,
           accessToken: token,
+          refreshToken,
         });
         setToastMessage("Agendamento confirmado");
       }

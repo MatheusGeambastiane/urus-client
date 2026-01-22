@@ -1,8 +1,10 @@
 import { publicEnv } from "@/shared/config/public-env";
+import { fetchWithAuth } from "@/shared/auth/auth-fetch";
 
 type UpdateAppointmentPayload = {
   appointmentId: number;
   accessToken?: string | null;
+  refreshToken?: string | null;
   status?: string;
   dateTime?: string;
   professionalId?: number;
@@ -12,6 +14,7 @@ type UpdateAppointmentPayload = {
 export const updateAppointment = async ({
   appointmentId,
   accessToken,
+  refreshToken,
   status,
   dateTime,
   professionalId,
@@ -23,16 +26,16 @@ export const updateAppointment = async ({
   if (typeof professionalId === "number") body.professional = professionalId;
   if (typeof serviceId === "number") body.service_id = serviceId;
 
-  const response = await fetch(
+  const { response } = await fetchWithAuth(
     `${publicEnv.apiBaseUrl}/webapp/appointments/${appointmentId}/update/`,
     {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: JSON.stringify(body),
-    }
+    },
+    { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
   );
 
   if (!response.ok) {

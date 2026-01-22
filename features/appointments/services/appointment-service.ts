@@ -1,10 +1,12 @@
 import { publicEnv } from "@/shared/config/public-env";
+import { fetchWithAuth } from "@/shared/auth/auth-fetch";
 
 type AppointmentPayload = {
   serviceId: number;
   professionalId: number;
   dateTime: string;
   accessToken?: string | null;
+  refreshToken?: string | null;
 };
 
 export const createAppointment = async ({
@@ -12,19 +14,23 @@ export const createAppointment = async ({
   professionalId,
   dateTime,
   accessToken,
+  refreshToken,
 }: AppointmentPayload) => {
-  const response = await fetch(`${publicEnv.apiBaseUrl}/webapp/appointments/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+  const { response } = await fetchWithAuth(
+    `${publicEnv.apiBaseUrl}/webapp/appointments/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        service_id: serviceId,
+        date_time: dateTime,
+        professional: professionalId,
+      }),
     },
-    body: JSON.stringify({
-      service_id: serviceId,
-      date_time: dateTime,
-      professional: professionalId,
-    }),
-  });
+    { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
+  );
 
   if (!response.ok) {
     const errorText = await response.text();
