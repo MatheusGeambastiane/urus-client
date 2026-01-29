@@ -4,7 +4,7 @@ import { ProfessionalsScreen } from "@/features/professionals/components/profess
 
 type ProfessionalsPageProps = {
   params: Promise<{ serviceId: string }>;
-  searchParams?: { continue_scheduling?: string };
+  searchParams?: Promise<{ continue_scheduling?: string }>;
 };
 
 export default async function ProfessionalsPage({
@@ -12,6 +12,7 @@ export default async function ProfessionalsPage({
   searchParams,
 }: ProfessionalsPageProps) {
   const { serviceId } = await params;
+  const resolvedSearchParams = await searchParams;
   const parsedId = Number(serviceId);
 
   if (Number.isNaN(parsedId)) {
@@ -19,7 +20,8 @@ export default async function ProfessionalsPage({
   }
 
   const professionals = await getProfessionals({ serviceId: parsedId });
-  const continueScheduling = searchParams?.continue_scheduling === "true";
+  const continueScheduling =
+    resolvedSearchParams?.continue_scheduling === "true";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-8 px-4 pb-28 pt-8">

@@ -27,6 +27,7 @@ export const createAppointment = async ({
         service_id: serviceId,
         date_time: dateTime,
         professional: professionalId,
+        appointment_origin: "schedule_system",
       }),
     },
     { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
