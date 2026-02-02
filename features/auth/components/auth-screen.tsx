@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { loginSchema, registerSchema } from "../validation/auth-schemas";
 import { getPasswordStrength } from "../utils/password-strength";
@@ -213,9 +214,47 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
               <button
                 type="button"
                 onClick={() => setShowLoginPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-500"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-500"
+                aria-label={showLoginPassword ? "Ocultar senha" : "Mostrar senha"}
               >
-                {showLoginPassword ? "Ocultar" : "Ver"}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {showLoginPassword ? (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M4 4L20 20"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </>
+                  )}
+                </svg>
               </button>
             </div>
             {loginErrors.password ? (
@@ -231,6 +270,13 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
           >
             {loginLoading ? "Entrando..." : "Entrar"}
           </Button>
+
+          <Link
+            href="/password-reset"
+            className="block text-center text-xs font-semibold text-ink-600 transition hover:text-ink-900"
+          >
+            Esqueci a minha senha
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -321,9 +367,49 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
               <button
                 type="button"
                 onClick={() => setShowRegisterPassword((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-500"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-500"
+                aria-label={
+                  showRegisterPassword ? "Ocultar senha" : "Mostrar senha"
+                }
               >
-                {showRegisterPassword ? "Ocultar" : "Ver"}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {showRegisterPassword ? (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M4 4L20 20"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </>
+                  )}
+                </svg>
               </button>
             </div>
             <div className="space-y-1">
@@ -362,9 +448,49 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
               <button
                 type="button"
                 onClick={() => setShowRegisterConfirm((prev) => !prev)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-ink-500"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-500"
+                aria-label={
+                  showRegisterConfirm ? "Ocultar senha" : "Mostrar senha"
+                }
               >
-                {showRegisterConfirm ? "Ocultar" : "Ver"}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {showRegisterConfirm ? (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <path
+                        d="M3 12C4.8 8 8 6 12 6C16 6 19.2 8 21 12C19.2 16 16 18 12 18C8 18 4.8 16 3 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M4 4L20 20"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </>
+                  )}
+                </svg>
               </button>
             </div>
             {registerErrors.confirmPassword ? (

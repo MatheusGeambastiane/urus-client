@@ -20,12 +20,13 @@ const extractPageParam = (url: string | null) => {
 };
 
 type AppointmentsPageProps = {
-  searchParams?: { page?: string; page_size?: string };
+  searchParams: Promise<{ page?: string; page_size?: string }>;
 };
 
 export default async function AppointmentsPage({
   searchParams,
 }: AppointmentsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const session = await getAuthSession();
   const accessToken = (session?.user as { accessToken?: string | null })
     ?.accessToken;
@@ -36,8 +37,8 @@ export default async function AppointmentsPage({
     redirect("/auth?tab=login&redirect=/appointments");
   }
 
-  const page = parseQueryNumber(searchParams?.page, 1);
-  const pageSize = parseQueryNumber(searchParams?.page_size, 2);
+  const page = parseQueryNumber(resolvedSearchParams?.page, 1);
+  const pageSize = parseQueryNumber(resolvedSearchParams?.page_size, 2);
   const response = await getRecentAppointments({
     accessToken,
     refreshToken,

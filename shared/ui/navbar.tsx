@@ -9,6 +9,8 @@ import { LetterReveal } from "@/shared/ui/letter-reveal";
 export const Navbar = () => {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const profilePic =
+    (session?.user as { profilePic?: string | null } | null)?.profilePic ?? null;
 
   const handleSignOut = async () => {
     setOpen(false);
@@ -39,30 +41,38 @@ export const Navbar = () => {
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink-700 shadow-soft"
+            className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-ink-700 shadow-soft"
             aria-label="Menu do usuario"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle
-                cx="12"
-                cy="8"
-                r="4"
-                stroke="currentColor"
-                strokeWidth="1.6"
+            {profilePic ? (
+              <img
+                src={profilePic}
+                alt="Foto do usuario"
+                className="h-full w-full object-cover"
               />
-              <path
-                d="M4 20C4.8 16.8 7.8 15 12 15C16.2 15 19.2 16.8 20 20"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            </svg>
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="4"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <path
+                  d="M4 20C4.8 16.8 7.8 15 12 15C16.2 15 19.2 16.8 20 20"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
           </button>
 
           {open ? (
@@ -86,13 +96,22 @@ export const Navbar = () => {
                     </Link>
                   </>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="w-full rounded-2xl px-3 py-2 text-left text-ink-700 transition hover:bg-ink-100"
-                  >
-                    Sair
-                  </button>
+                  <>
+                    <Link
+                      href="/profile"
+                      className="block rounded-2xl px-3 py-2 text-ink-700 transition hover:bg-ink-100"
+                      onClick={() => setOpen(false)}
+                    >
+                      Meu perfil
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="w-full rounded-2xl px-3 py-2 text-left text-ink-700 transition hover:bg-ink-100"
+                    >
+                      Sair
+                    </button>
+                  </>
                 )}
               </div>
             </div>

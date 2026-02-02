@@ -48,6 +48,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: data.access ?? data.token ?? null,
           refreshToken: data.refresh ?? null,
           firstName: user.first_name ?? user.firstName ?? null,
+          profilePic: user.profile_pic ?? user.profilePic ?? null,
         } as {
           id: string;
           name?: string;
@@ -55,6 +56,7 @@ export const authOptions: NextAuthOptions = {
           accessToken?: string | null;
           refreshToken?: string | null;
           firstName?: string | null;
+          profilePic?: string | null;
         };
       },
     }),
@@ -71,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = (user as { accessToken?: string | null }).accessToken ?? null;
         token.firstName = (user as { firstName?: string | null }).firstName ?? null;
         token.refreshToken = (user as { refreshToken?: string | null }).refreshToken ?? null;
+        token.profilePic = (user as { profilePic?: string | null }).profilePic ?? null;
       }
       return token;
     },
@@ -80,12 +83,14 @@ export const authOptions: NextAuthOptions = {
           accessToken?: string | null;
           refreshToken?: string | null;
           firstName?: string | null;
+          profilePic?: string | null;
         })
           .accessToken = (token as { accessToken?: string | null }).accessToken ?? null;
         (session.user as {
           accessToken?: string | null;
           refreshToken?: string | null;
           firstName?: string | null;
+          profilePic?: string | null;
         })
           .refreshToken = (token as { refreshToken?: string | null })
           .refreshToken ?? null;
@@ -93,8 +98,16 @@ export const authOptions: NextAuthOptions = {
           accessToken?: string | null;
           refreshToken?: string | null;
           firstName?: string | null;
+          profilePic?: string | null;
         })
           .firstName = (token as { firstName?: string | null }).firstName ?? null;
+        (session.user as {
+          accessToken?: string | null;
+          refreshToken?: string | null;
+          firstName?: string | null;
+          profilePic?: string | null;
+        })
+          .profilePic = (token as { profilePic?: string | null }).profilePic ?? null;
       }
       return session;
     },
