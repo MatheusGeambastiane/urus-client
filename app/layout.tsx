@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthSessionProvider } from "@/shared/auth/session-provider";
 import { Navbar } from "@/shared/ui/navbar";
 import { NavBottom } from "@/shared/ui/nav-bottom";
+import { Analytics } from "@vercel/analytics/next";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-display",
@@ -43,6 +44,7 @@ export default function RootLayout({
           {children}
           <NavBottom />
         </AuthSessionProvider>
+        <Analytics />
       </body>
     </html>
   );
