@@ -7,9 +7,13 @@ export type AppointmentServiceItem = {
 export type RecentAppointment = {
   id: number;
   date_time: string;
+  status?: string;
+  professional?: number;
+  professional_id?: number;
   professional_name: string;
   services: AppointmentServiceItem[];
   price_paid: string;
+  service_id?: number;
 };
 
 export type RecentAppointmentsResponse = {

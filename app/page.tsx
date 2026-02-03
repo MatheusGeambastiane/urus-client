@@ -69,6 +69,7 @@ export default async function Home() {
       {nextAppointment ? (
         <NextAppointmentCard
           appointment={nextAppointment}
+          services={services}
           accessToken={accessToken ?? null}
           refreshToken={refreshToken ?? null}
         />

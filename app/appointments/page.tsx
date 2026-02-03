@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/shared/auth/server";
 import { getRecentAppointments } from "@/features/appointments/services/recent-appointments-service";
 import { RecentAppointmentsList } from "@/features/appointments/components/recent-appointments-list";
+import { getServices } from "@/features/services/services/service-service";
 
 const parseQueryNumber = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
@@ -39,12 +40,15 @@ export default async function AppointmentsPage({
 
   const page = parseQueryNumber(resolvedSearchParams?.page, 1);
   const pageSize = parseQueryNumber(resolvedSearchParams?.page_size, 2);
-  const response = await getRecentAppointments({
-    accessToken,
-    refreshToken,
-    page,
-    pageSize,
-  });
+  const [response, services] = await Promise.all([
+    getRecentAppointments({
+      accessToken,
+      refreshToken,
+      page,
+      pageSize,
+    }),
+    getServices(),
+  ]);
 
   const nextPage = extractPageParam(response.next);
   const previousPage = extractPageParam(response.previous);
@@ -90,7 +94,12 @@ export default async function AppointmentsPage({
           Nenhum agendamento encontrado.
         </div>
       ) : (
-        <RecentAppointmentsList items={response.results} />
+        <RecentAppointmentsList
+          items={response.results}
+          services={services}
+          accessToken={accessToken}
+          refreshToken={refreshToken}
+        />
       )}
 
       <div className="flex items-center justify-between">

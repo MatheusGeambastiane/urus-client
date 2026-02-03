@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "Inicio", icon: "home" },
   { href: "/appointments", label: "Meus agendamentos", icon: "calendar" },
+  { href: "/info", label: "Informações", icon: "location" },
 ] as const;
 
 export const NavBottom = () => {
@@ -42,7 +43,7 @@ export const NavBottom = () => {
                         strokeLinejoin="round"
                       />
                     </svg>
-                  ) : (
+                  ) : item.icon === "calendar" ? (
                     <svg
                       width="18"
                       height="18"
@@ -66,9 +67,34 @@ export const NavBottom = () => {
                         strokeLinecap="round"
                       />
                     </svg>
+                  ) : (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 22C15.5 18.5 19 15.4 19 11.2C19 7.2 15.9 4 12 4C8.1 4 5 7.2 5 11.2C5 15.4 8.5 18.5 12 22Z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        cx="12"
+                        cy="11"
+                        r="2.5"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                    </svg>
                   )}
                 </span>
-                <span>{item.label}</span>
+                <span className="min-h-[28px] text-center leading-tight">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
