@@ -30,6 +30,14 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
   const [slotsError, setSlotsError] = useState<string | null>(null);
 
   const groupedSlots = useMemo(() => groupSlotsByPeriod(slots), [slots]);
+  const professionalsHref = useMemo(() => {
+    const params = new URLSearchParams({
+      date: selectedDate,
+      time: selectedTime ?? "",
+    });
+
+    return `/services/${service.id}/schedule/professionals?${params.toString()}`;
+  }, [selectedDate, selectedTime, service.id]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -175,7 +183,7 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
         <div className="fixed bottom-24 left-0 right-0 z-10 border-t border-ink-100 bg-white/95 px-4 py-4 backdrop-blur">
           <div className="mx-auto w-full max-w-md">
             <Link
-              href={`/services/${service.id}/schedule/professionals`}
+              href={professionalsHref}
               className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink-900 text-sm font-semibold text-white transition hover:bg-ink-700"
             >
               Selecionar profissional

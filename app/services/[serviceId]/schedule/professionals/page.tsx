@@ -4,7 +4,11 @@ import { ProfessionalsScreen } from "@/features/professionals/components/profess
 
 type ProfessionalsPageProps = {
   params: Promise<{ serviceId: string }>;
-  searchParams?: Promise<{ continue_scheduling?: string }>;
+  searchParams?: Promise<{
+    continue_scheduling?: string;
+    date?: string;
+    time?: string;
+  }>;
 };
 
 export default async function ProfessionalsPage({
@@ -19,7 +23,11 @@ export default async function ProfessionalsPage({
     notFound();
   }
 
-  const professionals = await getProfessionals({ serviceId: parsedId });
+  const professionals = await getProfessionals({
+    serviceId: parsedId,
+    date: resolvedSearchParams?.date,
+    time: resolvedSearchParams?.time,
+  });
   const continueScheduling =
     resolvedSearchParams?.continue_scheduling === "true";
 
