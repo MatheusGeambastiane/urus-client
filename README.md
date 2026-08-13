@@ -16,6 +16,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Login com Google
+
+Copie `.env.example` para `.env.local` e preencha:
+
+```env
+GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=seu-client-secret
+```
+
+No cliente OAuth do Google Cloud, cadastre as URIs de redirecionamento:
+
+- `http://localhost:3000/api/auth/callback/google`
+- `https://agenda.urusbarbearia.com.br/api/auth/callback/google`
+
+O backend deve receber o mesmo client id em `GOOGLE_OAUTH2_CLIENT_ID`. O client
+secret fica somente no webapp/NextAuth e nunca deve ser exposto em uma variável
+`NEXT_PUBLIC_*`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

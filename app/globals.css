@@ -27,7 +27,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display), ui-serif, serif;
+  font-family: var(--font-logo), ui-sans-serif, system-ui;
 }
 
 .font-logo {

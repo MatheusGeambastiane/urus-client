@@ -1,10 +1,46 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { env } from "@/shared/config/env";
+
+type UrusAuthUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  firstName?: string | null;
+  profilePic?: string | null;
+};
+
+type UrusAuthResponse = {
+  access?: string;
+  refresh?: string;
+  user?: {
+    id?: string | number;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    profile_pic?: string | null;
+  };
+};
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
+    GoogleProvider({
+      clientId: env.googleClientId,
+      clientSecret: env.googleClientSecret,
+      authorization: {
+        params: {
+          scope: [
+            "openid",
+            "email",
+            "profile",
+          ].join(" "),
+        },
+      },
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -32,7 +68,7 @@ export const authOptions: NextAuthOptions = {
             if (typeof errorData?.detail === "string") {
               detail = errorData.detail;
             }
-          } catch (error) {
+          } catch {
             detail = "Nao foi possivel fazer login.";
           }
           throw new Error(detail);
@@ -68,6 +104,54 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") {
+        return true;
+      }
+      if (!account.id_token) {
+        return "/auth?error=GoogleSignin";
+      }
+
+      try {
+        const response = await fetch(`${env.apiBaseUrl}/webapp/auth/google/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id_token: account.id_token,
+          }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null) as {
+            detail?: string;
+          } | null;
+          console.error(
+            "[google-auth] Backend recusou o login:",
+            response.status,
+            errorData?.detail ?? "Resposta sem detalhes"
+          );
+          return "/auth?error=GoogleSignin";
+        }
+
+        const data = (await response.json()) as UrusAuthResponse;
+        const backendUser = data.user;
+        Object.assign(user as UrusAuthUser, {
+          id: String(backendUser?.id ?? user.id),
+          name:
+            [backendUser?.first_name, backendUser?.last_name]
+              .filter(Boolean)
+              .join(" ") || user.name,
+          email: backendUser?.email ?? user.email,
+          accessToken: data.access ?? null,
+          refreshToken: data.refresh ?? null,
+          firstName: backendUser?.first_name ?? null,
+          profilePic: backendUser?.profile_pic ?? user.image ?? null,
+        });
+        return true;
+      } catch (error) {
+        console.error("[google-auth] Falha ao chamar o backend:", error);
+        return "/auth?error=GoogleSignin";
+      }
+    },
     async jwt({ token, user }) {
       if (user && "accessToken" in user) {
         token.accessToken = (user as { accessToken?: string | null }).accessToken ?? null;

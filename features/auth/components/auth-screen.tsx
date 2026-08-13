@@ -13,6 +13,7 @@ import { Input } from "@/shared/ui/input";
 type AuthScreenProps = {
   defaultTab: "login" | "register";
   redirectTo: string;
+  initialMessage?: string | null;
 };
 
 type LoginForm = {
@@ -30,7 +31,11 @@ type RegisterForm = {
   autoLogin: boolean;
 };
 
-export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
+export const AuthScreen = ({
+  defaultTab,
+  redirectTo,
+  initialMessage = null,
+}: AuthScreenProps) => {
   const router = useRouter();
   const [tab, setTab] = useState<"login" | "register">(defaultTab);
   const [loginForm, setLoginForm] = useState<LoginForm>({
@@ -50,10 +55,11 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
   const [registerErrors, setRegisterErrors] = useState<Record<string, string>>({});
   const [loginLoading, setLoginLoading] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirm, setShowRegisterConfirm] = useState(false);
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState<string | null>(initialMessage);
 
   const strength = useMemo(
     () => getPasswordStrength(registerForm.password),
@@ -87,7 +93,7 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
         return;
       }
       router.push(redirectTo);
-    } catch (error) {
+    } catch {
       setAuthMessage("Nao foi possivel fazer login.");
     } finally {
       setLoginLoading(false);
@@ -133,10 +139,21 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
         setTab("login");
         setAuthMessage("Conta criada. Agora faca login.");
       }
-    } catch (error) {
+    } catch {
       setAuthMessage("Nao foi possivel criar a conta.");
     } finally {
       setRegisterLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthMessage(null);
+    setGoogleLoading(true);
+    try {
+      await signIn("google", { callbackUrl: redirectTo });
+    } catch {
+      setAuthMessage("Não foi possível iniciar o login com o Google.");
+      setGoogleLoading(false);
     }
   };
 
@@ -180,6 +197,36 @@ export const AuthScreen = ({ defaultTab, redirectTo }: AuthScreenProps) => {
           {authMessage}
         </div>
       ) : null}
+
+      <div className="space-y-5">
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loginLoading || registerLoading}
+          className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-ink-200 bg-white px-4 text-sm font-semibold text-ink-800 shadow-soft transition hover:-translate-y-0.5 hover:border-ink-400 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <svg
+            width="19"
+            height="19"
+            viewBox="0 0 18 18"
+            aria-hidden="true"
+          >
+            <path fill="#4285F4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.716v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.615Z" />
+            <path fill="#34A853" d="M9 18c2.43 0 4.468-.806 5.956-2.18l-2.91-2.258c-.805.54-1.835.86-3.046.86-2.344 0-4.328-1.585-5.037-3.714H.956v2.332A9 9 0 0 0 9 18Z" />
+            <path fill="#FBBC05" d="M3.963 10.708A5.41 5.41 0 0 1 3.681 9c0-.593.102-1.17.282-1.708V4.96H.956A9 9 0 0 0 0 9c0 1.452.347 2.827.956 4.04l3.007-2.332Z" />
+            <path fill="#EA4335" d="M9 3.578c1.321 0 2.507.454 3.442 1.346l2.582-2.582C13.464.89 11.426 0 9 0A9 9 0 0 0 .956 4.96l3.007 2.332C4.672 5.163 6.656 3.578 9 3.578Z" />
+          </svg>
+          {googleLoading ? "Abrindo o Google..." : "Continuar com o Google"}
+        </button>
+
+        <div className="flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-ink-200" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-400">
+            ou use seu e-mail
+          </span>
+          <span className="h-px flex-1 bg-ink-200" />
+        </div>
+      </div>
 
       {tab === "login" ? (
         <div className="space-y-4">

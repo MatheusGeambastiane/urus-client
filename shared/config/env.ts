@@ -4,6 +4,8 @@ export const env = {
     process.env.NEXT_PUBLIC_API_BASE_URL ??
     "",
   nextAuthSecret: process.env.NEXTAUTH_SECRET ?? "",
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
 };
 
 if (!env.apiBaseUrl) {

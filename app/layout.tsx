@@ -1,16 +1,10 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Manrope, Poppins } from "next/font/google";
+import { Manrope, Poppins } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/shared/auth/session-provider";
 import { Navbar } from "@/shared/ui/navbar";
 import { NavBottom } from "@/shared/ui/nav-bottom";
 import { Analytics } from "@vercel/analytics/next";
-
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 const manrope = Manrope({
   variable: "--font-body",
@@ -37,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${bricolage.variable} ${manrope.variable} ${poppins.variable} antialiased`}
+        className={`${manrope.variable} ${poppins.variable} antialiased`}
       >
         <AuthSessionProvider>
           <Navbar />
