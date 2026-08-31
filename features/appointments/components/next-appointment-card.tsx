@@ -14,14 +14,12 @@ type NextAppointmentCardProps = {
   appointment: NextAppointment;
   services: Service[];
   accessToken?: string | null;
-  refreshToken?: string | null;
 };
 
 export const NextAppointmentCard = ({
   appointment,
   services,
   accessToken,
-  refreshToken,
 }: NextAppointmentCardProps) => {
   const [currentAppointment, setCurrentAppointment] =
     useState<NextAppointment | null>(appointment);
@@ -55,7 +53,7 @@ export const NextAppointmentCard = ({
     const { response } = await fetchWithAuth(
       `${publicEnv.apiBaseUrl}/webapp/appointments/next/`,
       { cache: "no-store" },
-      { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
+      { accessToken }
     );
 
     if (response.status === 404) {
@@ -85,7 +83,6 @@ export const NextAppointmentCard = ({
         appointmentId: activeAppointment.id,
         status: "cancelado",
         accessToken,
-        refreshToken,
       });
       const next = await fetchNextAppointment().catch(() => null);
       setCurrentAppointment(next);
@@ -289,7 +286,6 @@ export const NextAppointmentCard = ({
         }}
         services={services}
         accessToken={accessToken}
-        refreshToken={refreshToken}
       />
     </>
   );

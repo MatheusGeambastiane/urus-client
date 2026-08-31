@@ -4,7 +4,6 @@ import { fetchWithAuth } from "@/shared/auth/auth-fetch";
 type UpdateAppointmentPayload = {
   appointmentId: number;
   accessToken?: string | null;
-  refreshToken?: string | null;
   status?: string;
   dateTime?: string;
   professionalId?: number;
@@ -14,7 +13,6 @@ type UpdateAppointmentPayload = {
 export const updateAppointment = async ({
   appointmentId,
   accessToken,
-  refreshToken,
   status,
   dateTime,
   professionalId,
@@ -35,7 +33,7 @@ export const updateAppointment = async ({
       },
       body: JSON.stringify(body),
     },
-    { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
+    { accessToken }
   );
 
   if (!response.ok) {

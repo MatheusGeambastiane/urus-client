@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { LetterReveal } from "@/shared/ui/letter-reveal";
@@ -9,6 +8,7 @@ import { LetterReveal } from "@/shared/ui/letter-reveal";
 export const Navbar = () => {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const profilePic =
     (session?.user as { profilePic?: string | null } | null)?.profilePic ?? null;
 
@@ -16,6 +16,28 @@ export const Navbar = () => {
     setOpen(false);
     await signOut({ callbackUrl: "/" });
   };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-20 bg-transparent backdrop-blur">
@@ -37,12 +59,15 @@ export const Navbar = () => {
             </span>
           </div>
         </div>
-        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+        <div ref={menuRef} className="absolute right-4 top-1/2 -translate-y-1/2">
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
             className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white text-ink-700 shadow-soft"
             aria-label="Menu do usuario"
+            aria-expanded={open}
+            aria-haspopup="menu"
+            aria-controls="user-menu"
           >
             {profilePic ? (
               <img
@@ -76,7 +101,7 @@ export const Navbar = () => {
           </button>
 
           {open ? (
-            <div className="absolute right-0 mt-3 w-48 rounded-3xl bg-white p-3 shadow-soft">
+            <div id="user-menu" role="menu" className="absolute right-0 mt-3 w-48 rounded-3xl bg-white p-3 shadow-soft">
               <div className="space-y-2 text-sm">
                 {!session ? (
                   <>

@@ -11,7 +11,6 @@ const cropSize = 220;
 
 type ProfilePageProps = {
   accessToken?: string | null;
-  refreshToken?: string | null;
 };
 
 type CropOffset = { x: number; y: number };
@@ -68,7 +67,7 @@ const loadImage = (src: string) =>
     img.src = src;
   });
 
-export const ProfilePage = ({ accessToken, refreshToken }: ProfilePageProps) => {
+export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [formValues, setFormValues] = useState<FormValues>(emptyForm);
   const [loading, setLoading] = useState(true);
@@ -134,7 +133,7 @@ export const ProfilePage = ({ accessToken, refreshToken }: ProfilePageProps) => 
         const { response } = await fetchWithAuth(
           `${publicEnv.apiBaseUrl}/webapp/users/me/`,
           { cache: "no-store" },
-          { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
+          { accessToken }
         );
         if (!response.ok) {
           throw new Error("Falha ao carregar perfil.");
@@ -162,7 +161,7 @@ export const ProfilePage = ({ accessToken, refreshToken }: ProfilePageProps) => 
     return () => {
       active = false;
     };
-  }, [accessToken, refreshToken]);
+  }, [accessToken]);
 
   useEffect(() => {
     if (!cropImageUrl) {
@@ -353,7 +352,7 @@ export const ProfilePage = ({ accessToken, refreshToken }: ProfilePageProps) => 
       const { response } = await fetchWithAuth(
         `${publicEnv.apiBaseUrl}/webapp/users/me/`,
         { method: "PATCH", body },
-        { accessToken, refreshToken, baseUrl: publicEnv.apiBaseUrl }
+        { accessToken }
       );
 
       if (!response.ok) {

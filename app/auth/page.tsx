@@ -1,4 +1,5 @@
 import { AuthScreen } from "@/features/auth/components/auth-screen";
+import { safeRelativeRedirect } from "@/shared/auth/safe-redirect";
 
 type AuthPageProps = {
   searchParams?: Promise<{ tab?: string; redirect?: string; error?: string }>;
@@ -8,7 +9,7 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
   const resolvedSearchParams = await searchParams;
   const tab =
     resolvedSearchParams?.tab === "register" ? "register" : "login";
-  const redirect = resolvedSearchParams?.redirect ?? "/";
+  const redirect = safeRelativeRedirect(resolvedSearchParams?.redirect);
   const initialMessage = resolvedSearchParams?.error
     ? "Não foi possível entrar com o Google. Tente novamente ou use seu e-mail e senha."
     : null;

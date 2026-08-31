@@ -1,7 +1,5 @@
 type FetchWithAuthOptions = {
   accessToken?: string | null;
-  refreshToken?: string | null;
-  baseUrl: string;
 };
 
 const isTokenInvalidResponse = (data: unknown) => {
@@ -13,28 +11,18 @@ const isTokenInvalidResponse = (data: unknown) => {
   );
 };
 
-const refreshAccessToken = async (
-  baseUrl: string,
-  refreshToken: string
-): Promise<string | null> => {
-  const response = await fetch(`${baseUrl}/webapp/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh: refreshToken }),
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const data = (await response.json()) as { access?: string; token?: string };
-  return data.access ?? data.token ?? null;
+const refreshAccessToken = async (): Promise<string | null> => {
+  if (typeof window === "undefined") return null;
+  const response = await fetch("/api/auth/session", { cache: "no-store" });
+  if (!response.ok) return null;
+  const session = (await response.json()) as { user?: { accessToken?: string | null } };
+  return session.user?.accessToken ?? null;
 };
 
 export const fetchWithAuth = async (
   url: string,
   init: RequestInit,
-  { accessToken, refreshToken, baseUrl }: FetchWithAuthOptions
+  { accessToken }: FetchWithAuthOptions
 ) => {
   const headers = new Headers(init.headers);
   if (accessToken) {
@@ -43,10 +31,10 @@ export const fetchWithAuth = async (
 
   const response = await fetch(url, { ...init, headers });
 
-  if (!response.ok && refreshToken) {
+  if (!response.ok) {
     const errorData = await response.clone().json().catch(() => null);
     if (isTokenInvalidResponse(errorData)) {
-      const nextAccess = await refreshAccessToken(baseUrl, refreshToken);
+      const nextAccess = await refreshAccessToken();
       if (nextAccess) {
         const retryHeaders = new Headers(init.headers);
         retryHeaders.set("Authorization", `Bearer ${nextAccess}`);

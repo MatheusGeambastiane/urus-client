@@ -25,6 +25,47 @@ type UrusAuthResponse = {
   };
 };
 
+type BackendJwt = {
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  error?: "RefreshAccessTokenError";
+};
+
+function tokenExpiresSoon(accessToken?: string | null): boolean {
+  if (!accessToken) return true;
+  try {
+    const payload = JSON.parse(
+      Buffer.from(accessToken.split(".")[1], "base64url").toString("utf8"),
+    ) as { exp?: number };
+    return !payload.exp || payload.exp * 1000 <= Date.now() + 30_000;
+  } catch {
+    return true;
+  }
+}
+
+async function refreshBackendToken(token: BackendJwt): Promise<BackendJwt> {
+  if (!token.refreshToken) return { ...token, error: "RefreshAccessTokenError" };
+  try {
+    const response = await fetch(`${env.apiBaseUrl}/webapp/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh: token.refreshToken }),
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Refresh recusado pelo backend");
+    const data = (await response.json()) as { access?: string; refresh?: string };
+    if (!data.access) throw new Error("Resposta de refresh inválida");
+    return {
+      ...token,
+      accessToken: data.access,
+      refreshToken: data.refresh ?? token.refreshToken,
+      error: undefined,
+    };
+  } catch {
+    return { ...token, accessToken: null, error: "RefreshAccessTokenError" };
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -159,25 +200,17 @@ export const authOptions: NextAuthOptions = {
         token.refreshToken = (user as { refreshToken?: string | null }).refreshToken ?? null;
         token.profilePic = (user as { profilePic?: string | null }).profilePic ?? null;
       }
-      return token;
+      if (!tokenExpiresSoon(token.accessToken as string | null | undefined)) return token;
+      return refreshBackendToken(token as BackendJwt);
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as {
           accessToken?: string | null;
-          refreshToken?: string | null;
           firstName?: string | null;
           profilePic?: string | null;
         })
           .accessToken = (token as { accessToken?: string | null }).accessToken ?? null;
-        (session.user as {
-          accessToken?: string | null;
-          refreshToken?: string | null;
-          firstName?: string | null;
-          profilePic?: string | null;
-        })
-          .refreshToken = (token as { refreshToken?: string | null })
-          .refreshToken ?? null;
         (session.user as {
           accessToken?: string | null;
           refreshToken?: string | null;
@@ -194,6 +227,14 @@ export const authOptions: NextAuthOptions = {
           .profilePic = (token as { profilePic?: string | null }).profilePic ?? null;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        return new URL(url).origin === baseUrl ? url : baseUrl;
+      } catch {
+        return baseUrl;
+      }
     },
   },
 };

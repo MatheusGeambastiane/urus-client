@@ -5,6 +5,7 @@ import { AuthSessionProvider } from "@/shared/auth/session-provider";
 import { Navbar } from "@/shared/ui/navbar";
 import { NavBottom } from "@/shared/ui/nav-bottom";
 import { Analytics } from "@vercel/analytics/next";
+import { AccessTracker } from "@/shared/analytics/access-tracker";
 
 const manrope = Manrope({
   variable: "--font-body",
@@ -34,6 +35,7 @@ export default function RootLayout({
         className={`${manrope.variable} ${poppins.variable} antialiased`}
       >
         <AuthSessionProvider>
+          <AccessTracker />
           <Navbar />
           {children}
           <NavBottom />

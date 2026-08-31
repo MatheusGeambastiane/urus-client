@@ -35,7 +35,6 @@ type EditAppointmentModalProps = {
   appointment: EditableAppointment;
   services: Service[];
   accessToken?: string | null;
-  refreshToken?: string | null;
 };
 
 type Step = "service" | "time" | "professional";
@@ -46,7 +45,6 @@ export const EditAppointmentModal = ({
   appointment,
   services,
   accessToken,
-  refreshToken,
 }: EditAppointmentModalProps) => {
   const router = useRouter();
   const initialServiceId = useMemo(() => {
@@ -264,7 +262,6 @@ export const EditAppointmentModal = ({
       await updateAppointment({
         appointmentId: appointment.id,
         accessToken,
-        refreshToken,
         ...updatedFields,
       });
       onClose();

@@ -10,14 +10,12 @@ type RecentAppointmentsListProps = {
   items: RecentAppointment[];
   services: Service[];
   accessToken?: string | null;
-  refreshToken?: string | null;
 };
 
 export const RecentAppointmentsList = ({
   items,
   services,
   accessToken,
-  refreshToken,
 }: RecentAppointmentsListProps) => {
   const [editing, setEditing] = useState<RecentAppointment | null>(null);
   const editingAppointment = useMemo(() => {
@@ -105,7 +103,6 @@ export const RecentAppointmentsList = ({
           appointment={editingAppointment}
           services={services}
           accessToken={accessToken}
-          refreshToken={refreshToken}
         />
       ) : null}
     </div>

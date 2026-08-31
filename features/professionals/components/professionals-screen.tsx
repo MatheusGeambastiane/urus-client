@@ -13,6 +13,7 @@ import {
 import type { AppointmentDraft } from "@/features/appointments/types/appointment-draft";
 import { createAppointment } from "@/features/appointments/services/appointment-service";
 import { updateAppointment } from "@/features/appointments/services/update-appointment-service";
+import { reportPortalAccessError } from "@/shared/analytics/portal-access";
 
 type ProfessionalsScreenProps = {
   professionals: ProfessionalProfile[];
@@ -77,8 +78,6 @@ export const ProfessionalsScreen = ({
     }
 
     const token = (session?.user as { accessToken?: string | null })?.accessToken;
-    const refreshToken = (session?.user as { refreshToken?: string | null })
-      ?.refreshToken;
     const isEditing = Boolean(draft?.appointmentId);
 
     setConfirmLoading(true);
@@ -90,7 +89,6 @@ export const ProfessionalsScreen = ({
           professionalId: draft.professionalId,
           dateTime,
           accessToken: token,
-          refreshToken,
         });
         setToastMessage("Agendamento atualizado");
       } else {
@@ -99,7 +97,6 @@ export const ProfessionalsScreen = ({
           professionalId: draft.professionalId,
           dateTime,
           accessToken: token,
-          refreshToken,
         });
         setToastMessage("Agendamento confirmado");
       }
@@ -108,6 +105,12 @@ export const ProfessionalsScreen = ({
         router.push("/");
       }, 1800);
     } catch (error) {
+      if (isEditing) {
+        reportPortalAccessError({
+          kind: "appointment_update",
+          message: error instanceof Error ? error.message : "Falha ao atualizar agendamento",
+        });
+      }
       setConfirmError(
         isEditing
           ? "Nao foi possivel atualizar o agendamento."

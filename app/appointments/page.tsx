@@ -31,9 +31,6 @@ export default async function AppointmentsPage({
   const session = await getAuthSession();
   const accessToken = (session?.user as { accessToken?: string | null })
     ?.accessToken;
-  const refreshToken = (session?.user as { refreshToken?: string | null })
-    ?.refreshToken;
-
   if (!accessToken) {
     redirect("/auth?tab=login&redirect=/appointments");
   }
@@ -43,7 +40,6 @@ export default async function AppointmentsPage({
   const [response, services] = await Promise.all([
     getRecentAppointments({
       accessToken,
-      refreshToken,
       page,
       pageSize,
     }),
@@ -98,7 +94,6 @@ export default async function AppointmentsPage({
           items={response.results}
           services={services}
           accessToken={accessToken}
-          refreshToken={refreshToken}
         />
       )}
 
