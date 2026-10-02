@@ -38,13 +38,23 @@ export const createAppointment = async ({
   );
 
   if (!response.ok) {
+    const responseText = await response.clone().text().catch(() => "");
+    let responseLog: unknown = responseText;
+    try {
+      responseLog = responseText ? JSON.parse(responseText) : null;
+    } catch {
+      // Preserve non-JSON responses as text for diagnostics.
+    }
     reportPortalAccessError({
       kind: "appointment_api",
       message: "Falha ao criar agendamento",
       statusCode: response.status,
+      log: {
+        response: responseLog,
+        request: { service_id: serviceId, professional_id: professionalId, date_time: dateTime },
+      },
     });
-    const errorText = await response.text();
-    throw new Error(errorText || "Falha ao criar agendamento.");
+    throw new Error(responseText || "Falha ao criar agendamento.");
   }
 
   return response.json();

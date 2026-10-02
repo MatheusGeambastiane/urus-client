@@ -13,7 +13,7 @@ import {
 import type { AppointmentDraft } from "@/features/appointments/types/appointment-draft";
 import { createAppointment } from "@/features/appointments/services/appointment-service";
 import { updateAppointment } from "@/features/appointments/services/update-appointment-service";
-import { reportPortalAccessError } from "@/shared/analytics/portal-access";
+import { reportPortalAccessError, trackPortalFlowEvent } from "@/shared/analytics/portal-access";
 
 type ProfessionalsScreenProps = {
   professionals: ProfessionalProfile[];
@@ -154,7 +154,12 @@ export const ProfessionalsScreen = ({
       <ProfessionalSelector
         professionals={professionals}
         selectedId={selectedProfessional?.id}
-        onSelect={setSelectedProfessional}
+        onSelect={(professional) => {
+          setSelectedProfessional(professional);
+          trackPortalFlowEvent("professional_selected", {
+            professional_id: professional.id,
+          });
+        }}
       />
 
       {confirmError ? (

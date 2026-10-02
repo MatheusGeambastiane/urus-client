@@ -9,6 +9,7 @@ import { getPasswordStrength } from "../utils/password-strength";
 import { registerUser } from "../services/auth-service";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { trackPortalFlowEvent } from "@/shared/analytics/portal-access";
 
 type AuthScreenProps = {
   defaultTab: "login" | "register";
@@ -92,6 +93,7 @@ export const AuthScreen = ({
         setAuthMessage(result.error);
         return;
       }
+      trackPortalFlowEvent("authenticated", { method: "credentials" });
       router.push(redirectTo);
     } catch {
       setAuthMessage("Nao foi possivel fazer login.");
@@ -134,6 +136,7 @@ export const AuthScreen = ({
           setAuthMessage(result.error);
           return;
         }
+        trackPortalFlowEvent("authenticated", { method: "registration" });
         router.push(redirectTo);
       } else {
         setTab("login");

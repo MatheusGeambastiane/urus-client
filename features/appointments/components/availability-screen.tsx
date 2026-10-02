@@ -14,6 +14,7 @@ import {
 } from "../utils/appointment-storage";
 import type { AppointmentDraft } from "../types/appointment-draft";
 import Link from "next/link";
+import { trackPortalFlowEvent } from "@/shared/analytics/portal-access";
 
 type AvailabilityScreenProps = {
   service: Service;
@@ -60,7 +61,7 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
           serviceId: service.id,
         });
         setSlots(response.slots);
-      } catch (error) {
+      } catch {
         setSlotsError("Nao foi possivel carregar os horarios.");
         setSlots([]);
       } finally {
@@ -174,7 +175,14 @@ export const AvailabilityScreen = ({ service }: AvailabilityScreenProps) => {
           <SlotsList
             groups={groupedSlots}
             selected={selectedTime}
-            onSelect={setSelectedTime}
+            onSelect={(time) => {
+              setSelectedTime(time);
+              trackPortalFlowEvent("time_selected", {
+                service_id: service.id,
+                date: selectedDate,
+                time,
+              });
+            }}
           />
         )}
       </section>
