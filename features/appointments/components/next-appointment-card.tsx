@@ -88,7 +88,7 @@ export const NextAppointmentCard = ({
       setCurrentAppointment(next);
       setIsExpanded(false);
       setConfirmCancel(false);
-    } catch (error) {
+    } catch {
       setActionError("Nao foi possivel cancelar o agendamento.");
     } finally {
       setActionLoading(null);
@@ -145,6 +145,29 @@ export const NextAppointmentCard = ({
               </span>
               <span>{activeAppointment.professional_name}</span>
             </div>
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-ink-400">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M9.5 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5c0 3.6-2.4 6-6 6h-.8a6 6 0 0 1-4.8-2.4l-2.2-3a1.55 1.55 0 0 1 2.4-2l2.4 2.2V11Z"
+                  stroke="currentColor"
+                  strokeWidth="1.55"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M6.2 7.2a4.2 4.2 0 0 1 1.1-4M4 9a7 7 0 0 1 1.4-7"
+                  stroke="currentColor"
+                  strokeWidth="1.35"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Toque para editar
+            </p>
           </div>
 
           <div

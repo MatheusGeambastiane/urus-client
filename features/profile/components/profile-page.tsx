@@ -59,6 +59,38 @@ const maskPhone = (value: string) => {
   return `(${ddd})${first} ${part1}-${part2}`;
 };
 
+const maskBirthDate = (value: string) => {
+  const digits = onlyDigits(value).slice(0, 8);
+  const day = digits.slice(0, 2);
+  const month = digits.slice(2, 4);
+  const year = digits.slice(4, 8);
+  if (digits.length <= 2) return day;
+  if (digits.length <= 4) return `${day}/${month}`;
+  return `${day}/${month}/${year}`;
+};
+
+const formatBirthDate = (value: string | null | undefined) => {
+  if (!value) return "";
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : maskBirthDate(value);
+};
+
+const parseBirthDate = (value: string) => {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+  if (
+    parsed.getFullYear() !== Number(year)
+    || parsed.getMonth() !== Number(month) - 1
+    || parsed.getDate() !== Number(day)
+    || parsed > new Date()
+  ) {
+    return null;
+  }
+  return `${year}-${month}-${day}`;
+};
+
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -67,9 +99,59 @@ const loadImage = (src: string) =>
     img.src = src;
   });
 
+const EditIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+    <path
+      d="M4 20h4L19 9l-4-4L4 16v4Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="m13.5 6.5 4 4" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+const CancelIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+    <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+    <path d="M7 3v3M17 3v3M4 9h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <rect x="4" y="5" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
+
+type FieldEditButtonProps = {
+  editing: boolean;
+  label: string;
+  onEdit: () => void;
+  onCancel: () => void;
+};
+
+const FieldEditButton = ({ editing, label, onEdit, onCancel }: FieldEditButtonProps) => (
+  <button
+    type="button"
+    onClick={editing ? onCancel : onEdit}
+    aria-label={editing ? `Cancelar edição de ${label}` : `Editar ${label}`}
+    title={editing ? "Cancelar edição" : "Editar"}
+    className={`absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 ${
+      editing
+        ? "text-red-600 hover:text-red-700"
+        : "text-ink-500 hover:text-ink-900"
+    }`}
+  >
+    {editing ? <CancelIcon /> : <EditIcon />}
+  </button>
+);
+
 export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [formValues, setFormValues] = useState<FormValues>(emptyForm);
+  const [birthDateInput, setBirthDateInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +171,10 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
   const [dragStart, setDragStart] = useState<CropOffset>({ x: 0, y: 0 });
   const [offsetStart, setOffsetStart] = useState<CropOffset>({ x: 0, y: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const birthDatePickerRef = useRef<HTMLInputElement>(null);
 
   const displayPhoto = photoOverrideUrl ?? profile?.profile_pic ?? null;
+  const hasPendingChanges = isEditing || pendingPhoto !== null;
 
   const cropMetrics = useMemo(() => {
     const { width, height } = cropImageSize;
@@ -148,6 +232,7 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
           phone: data.phone ?? "",
           date_of_birth: data.date_of_birth ?? "",
         });
+        setBirthDateInput(formatBirthDate(data.date_of_birth));
       } catch (fetchError) {
         if (active) {
           setError("Nao foi possivel carregar o perfil.");
@@ -195,22 +280,23 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
     setCropOffset((prev) => clampOffset(prev));
   }, [cropMetrics.maxOffsetX, cropMetrics.maxOffsetY]);
 
-  const handleToggleEdit = () => {
-    if (isEditing) {
-      setFormValues({
-        name: profile?.name ?? "",
-        email: profile?.email ?? "",
-        cpf: profile?.cpf ?? "",
-        phone: profile?.phone ?? "",
-        date_of_birth: profile?.date_of_birth ?? "",
-      });
-      setPendingPhoto(null);
-      setPhotoOverrideUrl(null);
-      setSaveError(null);
-      setIsEditing(false);
-      return;
-    }
+  const enableEditing = () => {
     setIsEditing(true);
+    setSaveError(null);
+  };
+
+  const cancelEditing = () => {
+    setFormValues({
+      name: profile?.name ?? "",
+      email: profile?.email ?? "",
+      cpf: profile?.cpf ?? "",
+      phone: profile?.phone ?? "",
+      date_of_birth: profile?.date_of_birth ?? "",
+    });
+    setBirthDateInput(formatBirthDate(profile?.date_of_birth));
+    setPendingPhoto(null);
+    setPhotoOverrideUrl(null);
+    setIsEditing(false);
     setSaveError(null);
   };
 
@@ -226,6 +312,16 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
       }
       setFormValues((prev) => ({ ...prev, [field]: value }));
     };
+
+  const openBirthDatePicker = () => {
+    const picker = birthDatePickerRef.current;
+    if (!picker) return;
+    try {
+      picker.showPicker();
+    } catch {
+      picker.click();
+    }
+  };
 
   const handlePhotoEditClick = () => {
     setPhotoMenuOpen(false);
@@ -325,7 +421,6 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
       setPendingPhoto(file);
       setPhotoOverrideUrl(url);
       setPhotoEditorOpen(false);
-      setIsEditing(true);
     } catch (cropError) {
       setSaveError("Nao foi possivel cortar a imagem.");
     }
@@ -336,6 +431,15 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
       setSaveError("Sessao expirada. Entre novamente.");
       return;
     }
+    if (!formValues.name.trim() || !formValues.email.trim() || !formValues.phone.trim()) {
+      setSaveError("Preencha nome, email e telefone antes de salvar.");
+      return;
+    }
+    const parsedBirthDate = birthDateInput ? parseBirthDate(birthDateInput) : "";
+    if (birthDateInput && !parsedBirthDate) {
+      setSaveError("Informe uma data de nascimento válida no formato DD/MM/AAAA.");
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
@@ -344,7 +448,7 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
       body.append("email", formValues.email);
       body.append("cpf", formValues.cpf);
       body.append("phone", formValues.phone);
-      body.append("date_of_birth", formValues.date_of_birth);
+      body.append("date_of_birth", parsedBirthDate ?? "");
       if (pendingPhoto) {
         body.append("profile_pic", pendingPhoto);
       }
@@ -361,6 +465,11 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
 
       const data = (await response.json()) as UserProfile;
       setProfile(data);
+      setFormValues((current) => ({
+        ...current,
+        date_of_birth: data.date_of_birth ?? "",
+      }));
+      setBirthDateInput(formatBirthDate(data.date_of_birth));
       setIsEditing(false);
       setPendingPhoto(null);
       setPhotoOverrideUrl(null);
@@ -384,40 +493,9 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
         <p className="text-xs uppercase tracking-[0.3em] text-ink-400">
           Perfil
         </p>
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-semibold text-ink-900">
-            Meu perfil
-          </h1>
-          <button
-            type="button"
-            onClick={handleToggleEdit}
-            className="inline-flex items-center gap-2 rounded-full bg-ink-100 px-4 py-2 text-xs font-semibold text-ink-700 transition hover:bg-ink-200"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 17.25V21H6.75L18.37 9.38L14.62 5.63L3 17.25Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M14.62 5.63L18.37 9.38"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            {isEditing ? "Cancelar edicao" : "Editar perfil"}
-          </button>
-        </div>
+        <h1 className="font-display text-2xl font-semibold text-ink-900">
+          Meu perfil
+        </h1>
         <p className="text-sm text-ink-600">
           Atualize seus dados pessoais e foto.
         </p>
@@ -488,74 +566,149 @@ export const ProfilePage = ({ accessToken }: ProfilePageProps) => {
           </section>
 
           <fieldset className="space-y-4">
-            <label className="block text-sm text-ink-600">
-              Nome
-              <Input
-                value={formValues.name}
-                onChange={handleFieldChange("name")}
-                disabled={!isEditing}
-                className="mt-2 disabled:bg-ink-50 disabled:text-ink-500"
-              />
-            </label>
-            <label className="block text-sm text-ink-600">
-              Email
-              <Input
-                value={formValues.email}
-                onChange={handleFieldChange("email")}
-                disabled={!isEditing}
-                className="mt-2 disabled:bg-ink-50 disabled:text-ink-500"
-              />
-            </label>
-            <label className="block text-sm text-ink-600">
-              Telefone
-              <Input
-                value={maskPhone(formValues.phone)}
-                onChange={handleFieldChange("phone")}
-                disabled={!isEditing}
-                className="mt-2 disabled:bg-ink-50 disabled:text-ink-500"
-              />
-            </label>
-            <label className="block text-sm text-ink-600">
-              CPF
-              <Input
-                value={maskCpf(formValues.cpf)}
-                onChange={handleFieldChange("cpf")}
-                disabled={!isEditing}
-                className="mt-2 disabled:bg-ink-50 disabled:text-ink-500"
-              />
-            </label>
-            <label className="block text-sm text-ink-600">
-              Data de nascimento
-              <Input
-                type="date"
-                value={formValues.date_of_birth}
-                onChange={handleFieldChange("date_of_birth")}
-                disabled={!isEditing}
-                className="mt-2 disabled:bg-ink-50 disabled:text-ink-500"
-              />
-            </label>
+            <div className="block text-sm text-ink-600">
+              <label htmlFor="profile-name">Nome <span className="font-semibold text-red-600" aria-hidden="true">*</span></label>
+              <span className="relative mt-2 block">
+                <Input
+                  id="profile-name"
+                  value={formValues.name}
+                  onChange={handleFieldChange("name")}
+                  disabled={!isEditing}
+                  className="pr-14 disabled:bg-ink-50 disabled:text-ink-500"
+                />
+                <FieldEditButton
+                  editing={isEditing}
+                  label="nome"
+                  onEdit={enableEditing}
+                  onCancel={cancelEditing}
+                />
+              </span>
+            </div>
+            <div className="block text-sm text-ink-600">
+              <label htmlFor="profile-email">Email <span className="font-semibold text-red-600" aria-hidden="true">*</span></label>
+              <span className="relative mt-2 block">
+                <Input
+                  id="profile-email"
+                  type="email"
+                  value={formValues.email}
+                  onChange={handleFieldChange("email")}
+                  disabled={!isEditing}
+                  className="pr-14 disabled:bg-ink-50 disabled:text-ink-500"
+                />
+                <FieldEditButton
+                  editing={isEditing}
+                  label="email"
+                  onEdit={enableEditing}
+                  onCancel={cancelEditing}
+                />
+              </span>
+            </div>
+            <div className="block text-sm text-ink-600">
+              <label htmlFor="profile-phone">Telefone <span className="font-semibold text-red-600" aria-hidden="true">*</span></label>
+              <span className="relative mt-2 block">
+                <Input
+                  id="profile-phone"
+                  type="tel"
+                  value={maskPhone(formValues.phone)}
+                  onChange={handleFieldChange("phone")}
+                  disabled={!isEditing}
+                  className="pr-14 disabled:bg-ink-50 disabled:text-ink-500"
+                />
+                <FieldEditButton
+                  editing={isEditing}
+                  label="telefone"
+                  onEdit={enableEditing}
+                  onCancel={cancelEditing}
+                />
+              </span>
+            </div>
+            <div className="block text-sm text-ink-600">
+              <label htmlFor="profile-cpf">CPF</label>
+              <span className="relative mt-2 block">
+                <Input
+                  id="profile-cpf"
+                  inputMode="numeric"
+                  value={maskCpf(formValues.cpf)}
+                  onChange={handleFieldChange("cpf")}
+                  disabled={!isEditing}
+                  className="pr-14 disabled:bg-ink-50 disabled:text-ink-500"
+                />
+                <FieldEditButton
+                  editing={isEditing}
+                  label="CPF"
+                  onEdit={enableEditing}
+                  onCancel={cancelEditing}
+                />
+              </span>
+            </div>
+            <div className="block text-sm text-ink-600">
+              <label htmlFor="profile-birth-date">Data de nascimento</label>
+              <span className="relative mt-2 block">
+                <Input
+                  id="profile-birth-date"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="bday"
+                  placeholder="DD/MM/AAAA"
+                  value={birthDateInput}
+                  onChange={(event) => setBirthDateInput(maskBirthDate(event.target.value))}
+                  disabled={!isEditing}
+                  className={isEditing ? "pr-24" : "pr-14 disabled:bg-ink-50 disabled:text-ink-500"}
+                />
+                {isEditing ? (
+                  <button
+                    type="button"
+                    onClick={openBirthDatePicker}
+                    aria-label="Selecionar data de nascimento no calendário"
+                    title="Abrir calendário"
+                    className="absolute right-12 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl bg-ink-100 text-ink-600 transition hover:bg-ink-200 hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2"
+                  >
+                    <CalendarIcon />
+                  </button>
+                ) : null}
+                <FieldEditButton
+                  editing={isEditing}
+                  label="data de nascimento"
+                  onEdit={enableEditing}
+                  onCancel={cancelEditing}
+                />
+                <input
+                  ref={birthDatePickerRef}
+                  type="date"
+                  value={parseBirthDate(birthDateInput) ?? ""}
+                  onChange={(event) => {
+                    setFormValues((current) => ({
+                      ...current,
+                      date_of_birth: event.target.value,
+                    }));
+                    setBirthDateInput(formatBirthDate(event.target.value));
+                  }}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute h-px w-px opacity-0"
+                />
+              </span>
+            </div>
           </fieldset>
+
+          {saveError ? (
+            <div className="rounded-3xl bg-white px-4 py-4 text-sm text-red-600 shadow-soft">
+              {saveError}
+            </div>
+          ) : null}
+
+          {hasPendingChanges ? (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-ink-900 px-6 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-ink-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+            >
+              {saving ? "Salvando..." : "Salvar alterações"}
+            </button>
+          ) : null}
         </>
       )}
-
-      {saveError ? (
-        <div className="rounded-3xl bg-white px-4 py-4 text-sm text-red-600 shadow-soft">
-          {saveError}
-        </div>
-      ) : null}
-
-      {isEditing ? (
-        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="rounded-full bg-ink-900 px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-ink-800 disabled:opacity-70"
-          >
-            {saving ? "Salvando..." : "Salvar alteracoes"}
-          </button>
-        </div>
-      ) : null}
 
       <input
         ref={fileInputRef}
